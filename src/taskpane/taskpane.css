@@ -15,16 +15,51 @@
      margin: 0;
      padding: 0;
  }
+
+ .goal-input {
+     padding: 0 10px 10px;
+     width: 100%;
+     display: -webkit-flex;
+     display: flex;
+     -webkit-flex-direction: row;
+     flex-direction: row;
+     -webkit-flex-wrap: nowrap;
+     flex-wrap: nowrap;
+     justify-content: space-evenly;
+     align-items: center;
+ }
  
  .ms-welcome__header {
-    padding: 20px;
-    padding-bottom: 30px;
-    padding-top: 100px;
+    height: 150px;
+    padding: 10px;
+    /*padding-bottom: 30px;*/
+    /*padding-top: 100px;*/
     display: -webkit-flex;
     display: flex;
     -webkit-flex-direction: column;
     flex-direction: column;
     align-items: center;
+ }
+
+ .progress-bar-wrapper {
+     width: 100%;
+     height: 36px;
+     margin: 5px 0;
+     border: 1.75px solid;
+     border-radius: 2px;
+     display: -webkit-flex;
+     display: flex;
+     -webkit-flex-direction: row;
+     flex-direction: row;
+     -webkit-flex-wrap: nowrap;
+     flex-wrap: nowrap;
+     justify-content: flex-start;
+     align-items: center;
+ }
+
+ .progress-bar {
+     height: 100%;
+     background-color: green;
  }
 
  .ms-welcome__main {
@@ -59,6 +94,10 @@
  
  .ms-welcome__features.ms-List .ms-ListItem > .ms-Icon {
      margin-right: 10px;
+ }
+
+ .ms-welcome__action {
+     width: 75%;
  }
  
  .ms-welcome__action.ms-Button--hero {
