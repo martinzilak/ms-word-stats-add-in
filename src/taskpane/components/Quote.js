@@ -7,7 +7,7 @@ const Quote = ({ quote }) => (
                 <hr style={{ width: '100%' }} />
 
                 <span className="ms-font-l ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20 quote">
-                    {quote.QUOTE}
+                    {`"${quote.QUOTE}"`}
                 </span>
 
                 {quote.AUTHOR && (
