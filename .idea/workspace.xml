@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="7c87884c-819b-4a76-a1e6-47583b4d2eb4" name="Default Changelist" comment="Dist first version." />
+    <list default="true" id="7c87884c-819b-4a76-a1e6-47583b4d2eb4" name="Default Changelist" comment="Added .gitignore.">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -65,7 +68,7 @@
       <workItem from="1613068373209" duration="12681000" />
       <workItem from="1613147711333" duration="73000" />
       <workItem from="1613147787240" duration="8842000" />
-      <workItem from="1613159530525" duration="1254000" />
+      <workItem from="1613159530525" duration="2186000" />
     </task>
     <task id="LOCAL-00001" summary="Rewrote demo components to functional style.">
       <created>1613069256876</created>
@@ -123,7 +126,14 @@
       <option name="project" value="LOCAL" />
       <updated>1613161485258</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Added .gitignore.">
+      <created>1613161568513</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1613161568513</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -147,6 +157,7 @@
     <MESSAGE value="Added page settings, split-up into components where possible, persisting settings." />
     <MESSAGE value="Added quotation marks to quotes." />
     <MESSAGE value="Dist first version." />
-    <option name="LAST_COMMIT_MESSAGE" value="Dist first version." />
+    <MESSAGE value="Added .gitignore." />
+    <option name="LAST_COMMIT_MESSAGE" value="Added .gitignore." />
   </component>
 </project>
