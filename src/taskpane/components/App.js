@@ -1,19 +1,40 @@
-import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
-import { useCallback, useState } from 'react';
-import * as React from "react";
-import { Button, ButtonType, SpinButton, TextField } from "office-ui-fabric-react";
+import React, { useState } from "react";
+import { Button, ButtonType, SpinButton, Dropdown } from "office-ui-fabric-react";
+import { Position } from 'office-ui-fabric-react/lib/utilities/positioning';
+import { CustomProperty } from '../constants/CustomProperty';
 import { GoalUnit } from '../constants/GoalUnit';
 import { getMotivationalQuote } from '../utils/getMotivationalQuote';
 import Header from "./Header";
 import Loading from "./Loading";
-import ProgressBar from './ProgressBar';
+import Progress from './Progress';
+import Quote from './Quote';
+import Statistics from './Statistics';
 /* global Button Header, HeroList, HeroListItem, Progress, Word */
+
+const getValueByUnit = (unit, { letters = 0, words = 0, paragraphs = 0, pages = 0 }) => {
+  if (unit === GoalUnit.LETTER) {
+    return letters;
+  }
+  if (unit === GoalUnit.WORD) {
+    return words;
+  }
+  if (unit === GoalUnit.PARAGRAPH) {
+    return paragraphs;
+  }
+  if (unit === GoalUnit.PAGE) {
+    return pages;
+  }
+  return 0;
+};
 
 const App = ({ title, isOfficeInitialized }) => {
   const [isCalculatedAtLeastOnce, setIsCalculatedAtLeastOnce] = useState(false);
 
-  const [goalNumber, setGoalNumber] = useState(1);
+  const [goalValue, setGoalValue] = useState(1);
   const [goalUnit, setGoalUnit] = useState(null);
+
+  const [pageValue, setPageValue] = useState(1);
+  const [pageUnit, setPageUnit] = useState(null);
 
   const [letterCount, setLetterCount] = useState(0); // FontColorA
   const [wordCount, setWordCount] = useState(0); // TextOverflow
@@ -23,16 +44,42 @@ const App = ({ title, isOfficeInitialized }) => {
   const [progress, setProgress] = useState(null);
   const [quote, setQuote] = useState(null);
 
-  const calculate = async () => {
-    return Word.run(async context => {
-      /**
-       * Insert your Word code here
-       */
+  Office.onReady(async () => {
+    return Word.run(async (context) => {
+      const loadedGoalUnit = context.document.properties.customProperties.getItemOrNullObject(CustomProperty.GOAL_UNIT);
+      const loadedGoalValue = context.document.properties.customProperties.getItemOrNullObject(CustomProperty.GOAL_VALUE);
+      const loadedPageUnit = context.document.properties.customProperties.getItemOrNullObject(CustomProperty.PAGE_UNIT);
+      const loadedPageValue = context.document.properties.customProperties.getItemOrNullObject(CustomProperty.PAGE_VALUE);
 
-      // const document = context.document.body;
+      context.load(loadedGoalUnit);
+      context.load(loadedGoalValue);
+      context.load(loadedPageUnit);
+      context.load(loadedPageValue);
+
+      await context.sync();
+
+      if (!loadedGoalUnit.isNullObject) {
+        setGoalUnit(loadedGoalUnit.value);
+      }
+
+      if (!loadedGoalValue.isNullObject) {
+        setGoalValue(loadedGoalValue.value);
+      }
+
+      if (!loadedPageUnit.isNullObject) {
+        setPageUnit(loadedPageUnit.value);
+      }
+
+      if (!loadedPageValue.isNullObject) {
+        setPageValue(loadedPageValue.value);
+      }
+    });
+  });
+
+  const calculate = async () => {
+    return Word.run(async (context) => {
       const body = context.document.body;
 
-      // context.load(document, [Word.BreakType.page]);
       context.load(body, ['text', 'paragraphs']);
       await context.sync();
 
@@ -42,29 +89,17 @@ const App = ({ title, isOfficeInitialized }) => {
       const letters = splitText.join('').length;
       const words = splitText.length;
       const paragraphs = body.paragraphs.items.length;
-      // const pages = body.text.split(/\f/g).length + 1;
-
-      let goalValue = 0;
-      if (goalUnit === GoalUnit.LETTER) {
-        goalValue = letters;
-      }
-      if (goalUnit === GoalUnit.WORD) {
-        goalValue = words;
-      }
-      if (goalUnit === GoalUnit.PARAGRAPH) {
-        goalValue = paragraphs;
-      }
-      if (goalUnit === GoalUnit.PAGE) {
-        goalValue = 0;
-      }
+      const pages = Math.ceil(getValueByUnit(pageUnit, { letters, words, paragraphs }) / pageValue);
 
       setLetterCount(letters);
       setWordCount(words);
       setParagraphCount(paragraphs);
-      setPageCount(0);
+      setPageCount(pages);
 
-      if (goalNumber > 0 && goalValue > 0) {
-        setProgress(Math.round(goalValue / goalNumber * 100));
+      const selectedGoal = getValueByUnit(goalUnit, { letters, words, paragraphs, pages });
+
+      if (goalValue > 0 && selectedGoal > 0) {
+        setProgress(Math.round(selectedGoal / goalValue * 100));
       } else {
         setProgress(null);
       }
@@ -72,6 +107,30 @@ const App = ({ title, isOfficeInitialized }) => {
       setQuote(getMotivationalQuote());
 
       setIsCalculatedAtLeastOnce(true);
+    });
+  };
+
+  const saveCustomProperties = async ({ goalValue, goalUnit, pageValue, pageUnit }) => {
+    return Word.run(async (context) => {
+      const customProperties = context.document.properties.customProperties;
+
+      if (goalValue) {
+        customProperties.add(CustomProperty.GOAL_VALUE, goalValue);
+      }
+
+      if (goalUnit) {
+        customProperties.add(CustomProperty.GOAL_UNIT, goalUnit);
+      }
+
+      if (pageValue) {
+        customProperties.add(CustomProperty.PAGE_VALUE, pageValue);
+      }
+
+      if (pageUnit) {
+        customProperties.add(CustomProperty.PAGE_UNIT, pageUnit);
+      }
+
+      await context.sync();
     });
   };
 
@@ -85,49 +144,109 @@ const App = ({ title, isOfficeInitialized }) => {
       <div className="ms-welcome">
         <Header logo="assets/logo-filled.png" title={title} message="Welcome" />
         <main className="ms-welcome__main">
-          <h2 className="ms-font-l ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">
-            Set your goal:
-          </h2>
+          <div className="goal-input">
+            <span style={{ width: '65%' }}>
+              <SpinButton
+                  label="Page size"
+                  labelPosition={Position.top}
+                  placeholder="Page size value"
+                  value={`${pageValue}`}
+                  min={1}
+                  step={1}
+                  onIncrement={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber) {
+                      const newValue = parsedNumber + 1
+                      setPageValue(newValue);
+                      saveCustomProperties({ pageValue: newValue });
+                    }
+                  }}
+                  onDecrement={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber && parsedNumber > 1) {
+                      const newValue = parsedNumber - 1;
+                      setPageValue(newValue);
+                      saveCustomProperties({ pageValue: newValue });
+                    }
+                  }}
+                  onValidate={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber && parsedNumber > 0) {
+                      setPageValue(parsedNumber);
+                      saveCustomProperties({ pageValue: parsedNumber });
+                    }
+                  }}
+              />
+            </span>
+
+            <span style={{ width: '30%' }}>
+              <Dropdown
+                  placeholder="Page size unit"
+                  selectedKey={pageUnit}
+                  onChange={(_, item) => {
+                    setPageUnit(item.key);
+                    saveCustomProperties({ pageUnit: item.key })
+                  }}
+                  options={[
+                    { key: GoalUnit.LETTER, text: 'Letter(s)' },
+                    { key: GoalUnit.WORD, text: 'Word(s)' },
+                    { key: GoalUnit.PARAGRAPH, text: 'Paragraph(s)' },
+                  ]}
+              />
+            </span>
+          </div>
 
           <div className="goal-input">
-            <SpinButton
-                placeholder="Goal value"
-                value={`${goalNumber}`}
-                min={1}
-                step={1}
-                onIncrement={(value) => {
-                  const parsedNumber = parseInt(value, 10);
-                  if (parsedNumber) {
-                    setGoalNumber(parsedNumber + 1);
-                  }
-                }}
-                onDecrement={(value) => {
-                  const parsedNumber = parseInt(value, 10);
-                  if (parsedNumber && parsedNumber > 1) {
-                    setGoalNumber(parsedNumber - 1);
-                  }
-                }}
-                onValidate={(value) => {
-                  const parsedNumber = parseInt(value, 10);
-                  if (parsedNumber && parsedNumber > 0) {
-                    setGoalNumber(parsedNumber);
-                  }
-                }}
-            />
+            <span style={{ width: '65%' }}>
+              <SpinButton
+                  label="Goal"
+                  labelPosition={Position.top}
+                  placeholder="Goal value"
+                  value={`${goalValue}`}
+                  min={1}
+                  step={1}
+                  onIncrement={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber) {
+                      const newValue = parsedNumber + 1
+                      setGoalValue(newValue);
+                      saveCustomProperties({ goalValue: newValue });
+                    }
+                  }}
+                  onDecrement={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber && parsedNumber > 1) {
+                      const newValue = parsedNumber - 1;
+                      setGoalValue(newValue);
+                      saveCustomProperties({ goalValue: newValue });
+                    }
+                  }}
+                  onValidate={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber && parsedNumber > 0) {
+                      setGoalValue(parsedNumber);
+                      saveCustomProperties({ goalValue: parsedNumber });
+                    }
+                  }}
+              />
+            </span>
 
-            <Dropdown
-                placeholder="Goal unit"
-                selectedKey={goalUnit}
-                onChange={(_, item) => {
-                  setGoalUnit(item.key);
-                }}
-                options={[
-                  { key: GoalUnit.LETTER, text: 'Letter(s)' },
-                  { key: GoalUnit.WORD, text: 'Word(s)' },
-                  { key: GoalUnit.PARAGRAPH, text: 'Paragraph(s)' },
-                  { key: GoalUnit.PAGE, text: 'Page(s)', }
-                ]}
-            />
+            <span style={{ width: '30%' }}>
+              <Dropdown
+                  placeholder="Goal unit"
+                  selectedKey={goalUnit}
+                  onChange={(_, item) => {
+                    setGoalUnit(item.key);
+                    saveCustomProperties({ goalUnit: item.key })
+                  }}
+                  options={[
+                    { key: GoalUnit.LETTER, text: 'Letter(s)' },
+                    { key: GoalUnit.WORD, text: 'Word(s)' },
+                    { key: GoalUnit.PARAGRAPH, text: 'Paragraph(s)' },
+                    { key: GoalUnit.PAGE, text: 'Page(s)', }
+                  ]}
+              />
+            </span>
           </div>
 
           <br />
@@ -146,68 +265,20 @@ const App = ({ title, isOfficeInitialized }) => {
 
           {isCalculatedAtLeastOnce ? (
               <>
-                {progress != null && (
-                    <>
-                      <span className="ms-font-l ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">
-                        Your progress:
-                      </span>
+                <Progress progress={progress} />
 
-                      <ProgressBar progress={progress} />
+                <Statistics
+                    letterCount={letterCount}
+                    wordCount={wordCount}
+                    paragraphCount={paragraphCount}
+                    pageCount={pageCount}
+                />
 
-                      {`${progress}%`}
-
-                      <br />
-                      <hr style={{ width: '100%' }} />
-                    </>
-                )}
-
-                <ul className="ms-List ms-welcome__features ms-u-slideUpIn10">
-                  <li className="ms-ListItem">
-                    <i className="ms-Icon ms-Icon--FontColorA"></i>
-                    <span className="ms-font-m ms-fontColor-neutralPrimary">
-                      {`Letter count: ${letterCount > 0 ? letterCount : '-'}`}
-                    </span>
-                  </li>
-
-                  <li className="ms-ListItem">
-                    <i className="ms-Icon ms-Icon--TextOverflow"></i>
-                    <span className="ms-font-m ms-fontColor-neutralPrimary">
-                      {`Word count: ${wordCount > 0 ? wordCount : '-'}`}
-                    </span>
-                  </li>
-
-                  <li className="ms-ListItem">
-                    <i className="ms-Icon ms-Icon--PageList"></i>
-                    <span className="ms-font-m ms-fontColor-neutralPrimary">
-                      {`Paragraph count: ${paragraphCount > 0 ? paragraphCount : '-'}`}
-                    </span>
-                  </li>
-
-                  <li className="ms-ListItem">
-                    <i className="ms-Icon ms-Icon--Copy"></i>
-                    <span className="ms-font-m ms-fontColor-neutralPrimary">
-                      {`Page count: ${pageCount > 0 ? pageCount : '-'}`}
-                    </span>
-                  </li>
-                </ul>
-
-                {quote != null && (
-                    <>
-                      <hr style={{ width: '100%' }} />
-
-                      <span className="ms-font-l ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">
-                        {quote.QUOTE}
-                      </span>
-
-                      <span className="ms-font-s ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">
-                        {`-- ${quote.AUTHOR}`}
-                      </span>
-                    </>
-                )}
+                <Quote quote={quote} />
               </>
           ) : (
               <p className="ms-font-l">
-                Click <b>Calculate</b> at least once to see the magic happen.
+                Click <b>Calculate</b> to see the statistics.
               </p>
           )}
         </main>

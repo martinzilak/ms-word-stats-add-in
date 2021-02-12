@@ -25,7 +25,35 @@
      flex-direction: row;
      -webkit-flex-wrap: nowrap;
      flex-wrap: nowrap;
+     justify-content: space-between;
+     align-items: flex-end;
+ }
+
+ .quote-container {
+     width: 100%;
+     display: -webkit-flex;
+     display: flex;
+     -webkit-flex-direction: column;
+     flex-direction: column;
+     -webkit-flex-wrap: nowrap;
+     flex-wrap: nowrap;
      justify-content: space-evenly;
+     align-items: center;
+ }
+
+ .quote {
+     width: 100%;
+ }
+
+ .quote-author {
+     width: 100%;
+     display: -webkit-flex;
+     display: flex;
+     -webkit-flex-direction: row;
+     flex-direction: row;
+     -webkit-flex-wrap: nowrap;
+     flex-wrap: nowrap;
+     justify-content: flex-end;
      align-items: center;
  }
  

@@ -1,5 +1,15 @@
 # Office-Addin-TaskPane-React-JS
 
+## Development
+
+```
+tab1> npm run dev-server
+tab2> npm start
+```
+
+---
+## Pre-generated text
+
 This repository contains the source code used by the [Yo Office generator](https://github.com/OfficeDev/generator-office) when you create a new Office Add-in that appears in the task pane. You can also use this repository as a sample to base your own project from if you choose not to use the generator. 
 
 ## JavaScript
