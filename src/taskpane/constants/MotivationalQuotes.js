@@ -4205,7 +4205,7 @@ export const MotivationalQuotes = [
     },
     {
         AUTHOR: "Elizabeth Browning",
-        QUOTE: "Whoso loves, believes the impossible."
+        QUOTE: "Who so loves, believes the impossible."
     },
     {
         AUTHOR: "Ella Fitzgerald",
