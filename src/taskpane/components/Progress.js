@@ -3,7 +3,7 @@ import ProgressBar from './ProgressBar';
 
 const Progress = ({ progress }) => (
     <>
-        {progress != null && (
+        {progress !== null && (
             <>
                 <span className="ms-font-l ms-fontWeight-semilight ms-fontColor-neutralPrimary ms-u-slideUpIn20">
                     Your progress:

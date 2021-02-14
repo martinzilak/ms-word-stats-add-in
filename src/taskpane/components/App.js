@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, ButtonType, SpinButton, Dropdown } from "office-ui-fabric-react";
+import { Button, ButtonType, SpinButton, Dropdown, Link } from "office-ui-fabric-react";
 import { Position } from 'office-ui-fabric-react/lib/utilities/positioning';
 import { CustomProperty } from '../constants/CustomProperty';
 import { getValueByUnit, Unit } from '../constants/Unit';
@@ -19,12 +19,13 @@ const App = ({ title, isOfficeInitialized }) => {
 
   const [pageValue, setPageValue] = useState(1);
   const [pageUnit, setPageUnit] = useState(null);
+  const [showPageSizeSettings, setShowPageSizeSettings] = useState(false);
 
-  const [letterCount, setLetterCount] = useState(0); // FontColorA
-  const [letterWithSpacesCount, setLetterWithSpacesCount] = useState(0); // FontColorA
-  const [wordCount, setWordCount] = useState(0); // TextOverflow
-  const [paragraphCount, setParagraphCount] = useState(0); // PageList
-  const [pageCount, setPageCount] = useState(0) // Copy
+  const [letterCount, setLetterCount] = useState(0);
+  const [letterWithSpacesCount, setLetterWithSpacesCount] = useState(0);
+  const [wordCount, setWordCount] = useState(0);
+  const [paragraphCount, setParagraphCount] = useState(0);
+  const [pageCount, setPageCount] = useState(0);
 
   const [progress, setProgress] = useState(null);
   const [quote, setQuote] = useState(null);
@@ -78,7 +79,7 @@ const App = ({ title, isOfficeInitialized }) => {
 
       const paragraphs = body.paragraphs.items.length;
 
-      const pages = Math.ceil(getValueByUnit(pageUnit, { letters, lettersWithSpaces, words }) / pageValue);
+      const pages = Math.round(getValueByUnit(pageUnit, { letters, lettersWithSpaces, words }) / pageValue);
 
       setLetterCount(letters);
       setLetterWithSpacesCount(lettersWithSpaces);
@@ -134,60 +135,13 @@ const App = ({ title, isOfficeInitialized }) => {
       <div className="ms-welcome">
         <Header logo="assets/logo-filled.png" title={title} message="Welcome" />
         <main className="ms-welcome__main">
-          <div className="value-unit-input">
-            <span style={{ width: '35%' }}>
-              <SpinButton
-                  label="Goal"
-                  labelPosition={Position.top}
-                  placeholder="Goal value"
-                  value={`${goalValue}`}
-                  min={1}
-                  step={1}
-                  onIncrement={(value) => {
-                    const parsedNumber = parseInt(value, 10);
-                    if (parsedNumber) {
-                      const newValue = parsedNumber + 1
-                      setGoalValue(newValue);
-                      saveCustomProperties({ goalValue: newValue });
-                    }
-                  }}
-                  onDecrement={(value) => {
-                    const parsedNumber = parseInt(value, 10);
-                    if (parsedNumber && parsedNumber > 1) {
-                      const newValue = parsedNumber - 1;
-                      setGoalValue(newValue);
-                      saveCustomProperties({ goalValue: newValue });
-                    }
-                  }}
-                  onValidate={(value) => {
-                    const parsedNumber = parseInt(value, 10);
-                    if (parsedNumber && parsedNumber > 0) {
-                      setGoalValue(parsedNumber);
-                      saveCustomProperties({ goalValue: parsedNumber });
-                    }
-                  }}
-              />
-            </span>
-
-            <span style={{ width: '60%' }}>
-              <Dropdown
-                  placeholder="Goal unit"
-                  selectedKey={goalUnit}
-                  onChange={(_, item) => {
-                    setGoalUnit(item.key);
-                    saveCustomProperties({ goalUnit: item.key })
-                  }}
-                  options={[
-                    { key: Unit.LETTER, text: 'Letter(s)' },
-                    { key: Unit.LETTER_WITH_SPACES, text: 'Letter(s) with spaces' },
-                    { key: Unit.WORD, text: 'Word(s)' },
-                    { key: Unit.PAGE, text: 'Page(s)', }
-                  ]}
-              />
-            </span>
+          <div className="page-size-control-toggle">
+            <Link onClick={() => setShowPageSizeSettings((previousValue) => !previousValue)}>
+              {`${showPageSizeSettings ? 'Hide' : 'Show'} page size settings`}
+            </Link>
           </div>
 
-          {goalUnit === Unit.PAGE && (
+          {showPageSizeSettings && (
               <div className="value-unit-input">
                 <span style={{ width: '35%' }}>
                   <SpinButton
@@ -241,6 +195,59 @@ const App = ({ title, isOfficeInitialized }) => {
               </div>
           )}
 
+          <div className="value-unit-input">
+            <span style={{ width: '35%' }}>
+              <SpinButton
+                  label="Goal"
+                  labelPosition={Position.top}
+                  placeholder="Goal value"
+                  value={`${goalValue}`}
+                  min={1}
+                  step={1}
+                  onIncrement={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber) {
+                      const newValue = parsedNumber + 1
+                      setGoalValue(newValue);
+                      saveCustomProperties({ goalValue: newValue });
+                    }
+                  }}
+                  onDecrement={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber && parsedNumber > 1) {
+                      const newValue = parsedNumber - 1;
+                      setGoalValue(newValue);
+                      saveCustomProperties({ goalValue: newValue });
+                    }
+                  }}
+                  onValidate={(value) => {
+                    const parsedNumber = parseInt(value, 10);
+                    if (parsedNumber && parsedNumber > 0) {
+                      setGoalValue(parsedNumber);
+                      saveCustomProperties({ goalValue: parsedNumber });
+                    }
+                  }}
+              />
+            </span>
+
+            <span style={{ width: '60%' }}>
+              <Dropdown
+                  placeholder="Goal unit"
+                  selectedKey={goalUnit}
+                  onChange={(_, item) => {
+                    setGoalUnit(item.key);
+                    saveCustomProperties({ goalUnit: item.key })
+                  }}
+                  options={[
+                    { key: Unit.LETTER, text: 'Letter(s)' },
+                    { key: Unit.LETTER_WITH_SPACES, text: 'Letter(s) with spaces' },
+                    { key: Unit.WORD, text: 'Word(s)' },
+                    ...(!!pageUnit ? [{ key: Unit.PAGE, text: 'Page(s)', }] : []),
+                  ]}
+              />
+            </span>
+          </div>
+
           <br />
 
           <Button
@@ -265,6 +272,7 @@ const App = ({ title, isOfficeInitialized }) => {
                     wordCount={wordCount}
                     paragraphCount={paragraphCount}
                     pageCount={pageCount}
+                    isPageSizeConfigured={!!pageUnit}
                 />
 
                 <Quote quote={quote} />
